@@ -157,6 +157,7 @@ function print_axisarray(io::IO, x::AbstractArray{T,N}, (h,w)::NTuple{2,Integer}
         align = Base.alignment(io, view(x, :, :, p...), rowinds, colaxis, w_data, w_data, colseplen)
         align = collect(zip(Base.Iterators.take(colaxis, length(align)), align))
         colsplit = nothing
+        coltruncate = false
         if length(align) < length(colaxis)
             # we didn't fit everything, so there will be a vertical split
             # compute alignment for the right hand side first, on at most half of the width
@@ -171,6 +172,9 @@ function print_axisarray(io::IO, x::AbstractArray{T,N}, (h,w)::NTuple{2,Integer}
             lalign = collect(zip(Base.Iterators.take(colaxis, length(lalign)), lalign))
             align = [lalign; reverse(ralign)]
             colsplit = length(lalign)
+        elseif length(colaxis) == 1 && sum(align[1][2]) ≥ w_data
+            # the one and only column is too wide, so we will truncate it when printing
+            coltruncate = true
         elseif docollabels
             # everything fits and there are column labels
             # increase the column sizes until things fit
@@ -203,7 +207,16 @@ function print_axisarray(io::IO, x::AbstractArray{T,N}, (h,w)::NTuple{2,Integer}
                 print(io, resetcrayon)
                 print(io, colsep)
             end
-            print_axisarray_row(io, view(x, r, :, p...), align, colsep, colsplit, mod(j,5)==1 ? coldots : coldotsspace)
+            if coltruncate
+                str = sprint(show, x[r, first(colaxis), p...], context=io)
+                if length(str) ≥ w_data
+                    print(io, str[1:w_data-2], '…')
+                else
+                    print(io, str)
+                end
+            else
+                print_axisarray_row(io, view(x, r, :, p...), align, colsep, colsplit, mod(j,5)==1 ? coldots : coldotsspace)
+            end
             if j == rowsplit
                 println(io)
                 if dorowlabels
