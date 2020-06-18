@@ -1,0 +1,8 @@
+name = "CustomAxes"
+uuid = "2950873b-8260-48be-9f6d-730f244c3eed"
+authors = ["Christopher Doris <github.com/cjdoris>"]
+version = "0.1.0"
+
+[deps]
+Crayons = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
