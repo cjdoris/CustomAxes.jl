@@ -65,9 +65,13 @@ function print_axisarray_dotsrow(io, dots, align, colsep, colsplit, colsplitsep)
         elseif i > 1
             print(io, colsep)
         end
-        print(io, dots)
-        for j in (1+dotslen):(a+b)
-            print(io, ' ')
+        dotsidx = a==0 ? 1 : a
+        for j in 1:(a+b)
+            if j == dotsidx
+                print(io, dots)
+            else
+                print(io, ' ')
+            end
         end
     end
 end
@@ -154,16 +158,29 @@ function print_axisarray(io::IO, x::AbstractArray{T,N}, (h,w)::NTuple{2,Integer}
         align = collect(zip(Base.Iterators.take(colaxis, length(align)), align))
         colsplit = nothing
         if length(align) < length(colaxis)
+            # we didn't fit everything, so there will be a vertical split
+            # compute alignment for the right hand side first, on at most half of the width
             rw = (w_data-coldotslen) ÷ 2
             ralign = Base.alignment(io, view(x, :, :, p...), rowinds, reverse(colaxis), rw, rw, colseplen)
             rw = sum(sum, ralign) + colseplen*max(0, length(ralign)-1)
             ralign = collect(zip(Base.Iterators.take(reverse(colaxis), length(ralign)), ralign))
+            # now compute alignment for the left hand side on whatever width remains
             lw = (w_data-coldotslen) - rw
             lalign = Base.alignment(io, view(x, :, :, p...), rowinds, colaxis, lw, lw, colseplen)
             lw = sum(sum, lalign) + colseplen*max(0, length(lalign)-1)
             lalign = collect(zip(Base.Iterators.take(colaxis, length(lalign)), lalign))
             align = [lalign; reverse(ralign)]
             colsplit = length(lalign)
+        elseif docollabels
+            # everything fits and there are column labels
+            # increase the column sizes until things fit
+            colwidths = [sum(Base.alignment(io, getlabel(colaxis, c))) for c in colaxis]
+            while true
+                newalign = [(c, w>a+b ? (a,b+1) : (a,b)) for (w,(c,(a,b))) in zip(colwidths, align)]
+                newalign == align && break
+                sum(a+b for (c,(a,b)) in newalign) + colseplen*max(0, length(colaxis)-1) ≥ w_data && break
+                align = newalign
+            end
         end
         # print column labels
         if docollabels
