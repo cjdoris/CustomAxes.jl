@@ -164,6 +164,8 @@ function similar(a::AxisArray{T,N}, ::Type{T2}, dims::Tuple) where {T,N,T2}
 end
 similar(a::AbstractAxisArray, ::Type{T}, dims::Tuple{Vararg{Int}}) where {T} =
     invoke(similar, Tuple{typeof(a), Type{T}, Tuple}, a, T, dims)
+similar(a::AxisArray, ::Type{T}, dims::Tuple{Vararg{Int}}) where {T} =
+    invoke(similar, Tuple{typeof(a), Type{T}, Tuple}, a, T, dims)
 
 dropdims_axisarray_impl(x::AxisArray, dims, newaxes) =
     AxisArray(dropdims(parent(x); dims=dims), newaxes...)
