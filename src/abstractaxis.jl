@@ -77,6 +77,7 @@ to_indices(x::AbstractArray, axes::Tuple{AbstractAxis, Vararg}, inds::Tuple{Abst
 
 promote_indices_rule(x::AbstractAxis, y::AbstractAxis) = (x,y)
 promote_indices_rule(x::AbstractAxis, y::AxisLike) = (x, SimpleAxis(y))
+promote_indices_rule(x::AbstractAxis, y::Integer) = (x, Base.OneTo(y))
 
 check_api(::Type{Bool}, a::AbstractAxis) = true
 
@@ -90,3 +91,6 @@ convert(::Type{T}, x) where {T<:AbstractAxis} = throw(MethodError(convert, (T, x
 convert(::Type{T}, x::T) where {T<:AbstractAxis} = x
 
 show(io::IO, m::MIME"text/plain", x::AbstractAxis) = show_axisarray(io, m, x)
+
+similar(a::AbstractArray{T,N}, ::Type{T2}, dims::NTuple{N,AbstractAxis}) where {T,N,T2} =
+    similar_axisarray(a, T2, dims)

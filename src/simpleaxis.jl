@@ -26,3 +26,6 @@ end
 
 convert(::Type{SimpleAxis{S,I,Is}}, a::SimpleAxis) where {S,I,Is} =
     SimpleAxis(convert(Is, parent(a)))
+
+unsimple(x) = x
+unsimple(x::SimpleAxis) = unsimple(parent(x))

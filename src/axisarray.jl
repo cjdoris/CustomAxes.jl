@@ -9,6 +9,7 @@ struct AxisArray{T,N,A<:AbstractArray{T,N},X<:NTuple{N,AxisLike}} <: AbstractAxi
     parent :: A
     axes :: X
     function AxisArray(arr::AbstractArray{T,N}, _axes::Vararg{AxisLike,N}) where {T,N}
+        _axes = map(unsimple, _axes)
         check_api(_axes...)
         axes(arr) == _axes || error("axes mismatch")
         new{T,N,typeof(arr),typeof(_axes)}(arr, _axes)
@@ -50,18 +51,18 @@ setindex!(x::AxisArray, v, i::Int...) = setindex!(parent(x), v, i...)
 
 Base.IndexStyle(x::AxisArray) = IndexStyle(parent(x))
 
-function similar(a::AbstractAxisArray{T,N}, ::Type{T2}, dims::Tuple) where {T,N,T2}
+function similar_axisarray(a::AbstractArray, T, dims)
     axes = map(to_axis, dims)
-    AxisArray(similar(Array{T2,length(dims)}, map(unwrap_for_similar, axes)), axes...)
+    AxisArray(similar(a, T, map(unwrap_for_similar, axes)), axes...)
 end
-function similar(a::AxisArray{T,N}, ::Type{T2}, dims::Tuple) where {T,N,T2}
+function similar_axisarray(a::AbstractAxisArray, T, dims)
     axes = map(to_axis, dims)
-    AxisArray(similar(parent(a), T2, map(unwrap_for_similar, axes)), axes...)
+    AxisArray(similar(Array{T,length(dims)}, map(unwrap_for_similar, axes)), axes...)
 end
-similar(a::AbstractAxisArray, ::Type{T}, dims::Tuple{Vararg{Int}}) where {T} =
-    invoke(similar, Tuple{typeof(a), Type{T}, Tuple}, a, T, dims)
-similar(a::AxisArray, ::Type{T}, dims::Tuple{Vararg{Int}}) where {T} =
-    invoke(similar, Tuple{typeof(a), Type{T}, Tuple}, a, T, dims)
+function similar_axisarray(a::AxisArray, T, dims)
+    similar_axisarray(parent(a), T, dims)
+end
+
 
 dropdims_axisarray_impl(x::AxisArray, dims, newaxes) =
     AxisArray(dropdims(parent(x); dims=dims), newaxes...)

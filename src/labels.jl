@@ -72,6 +72,9 @@ struct LabeledAxis{L,I,Ls<:AbstractVector,Is<:AxisLike,S} <: AbstractAxis{S,I}
     end
 end
 
+LabeledAxis(labels::AbstractVector, L::Type) =
+    LabeledAxis(labels, axes(labels, 1), L)
+
 function describe(io::IO, a::LabeledAxis)
     describe(io, parent(a))
     print(io, " with labels ")

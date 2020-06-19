@@ -41,13 +41,16 @@ function dropdims_axisarray(x, dims)
     dropdims_axisarray_impl(x, dims, newaxes)
 end
 
-Base.reduced_indices(x::AbstractAxisArray, d::Int) = reduced_indices_axisarray(x, d)
+Base.reduced_indices(x::AbstractAxisArray, d) = reduced_indices_axisarray(x, d)
 
-function reduced_indices_axisarray(x, d)
-    d ≥ 1 || throw(ArgumentError("dimension must be ≥ 1, got $d"))
-    ntuple(ndims(x)) do dd
-        ax = axes(x, dd)
-        d == dd ? Base.reduced_index(ax) : ax
+reduced_indices_axisarray(x, d::Integer) =
+    reduced_indices_axisarray(x, (d,))
+
+function reduced_indices_axisarray(x, ds)
+    all(d->d≥1, ds) || throw(ArgumentError("dimensions must be ≥ 1, got $ds"))
+    ntuple(ndims(x)) do d
+        ax = axes(x, d)
+        d in ds ? Base.reduced_index(ax) : ax
     end
 end
 

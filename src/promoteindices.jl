@@ -3,14 +3,21 @@
 # TYPE PIRACY
 function similar(::Type{T}, inds::Tuple) where {T<:AbstractArray}
     newinds = promote_indices(inds...)
-    typeof(newinds) === typeof(inds) && error("indices promotion did nothing")
-    Base.similar(T, newinds...)
+    typeof(newinds) === typeof(inds) && throw(MethodError(similar, (T, inds)))
+    Base.similar(T, newinds)
+end
+
+# TYPE PIRACY
+function similar(x::AbstractArray, T::Type, inds::Tuple)
+    newinds = promote_indices(inds...)
+    typeof(newinds) === typeof(inds) && throw(MethodError(similar, (x, T, inds)))
+    similar(x, T, newinds)
 end
 
 # TYPE PIRACY
 function reshape(x::AbstractArray, inds::Tuple)
     newinds = promote_indices(inds...)
-    typeof(newinds) === typeof(inds) && error("indices promotion did nothing")
+    typeof(newinds) === typeof(inds) && throw(MethodError(reshape, (x, inds)))
     reshape(x, newinds)
 end
 
