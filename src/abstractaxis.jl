@@ -60,7 +60,7 @@ check_secondarykeytype(S::Type) =
 find_secondarykeytype(T::Type, dflt::Type=Union{}) =
     check_secondarykeytype(Bool, T) ? find_secondarykeytype(supertype(T), T) : dflt
 
-similar(::Type{A}, axes::NTuple{N,AbstractAxis}) where {T,N,A<:AbstractArray{T,N}} =
+similar(A::Type{<:AbstractArray}, axes::Tuple{Vararg{AbstractAxis}}) =
     AxisArray(similar(A, map(unwrap_for_similar, axes)), axes...)
 
 reshape(x::AbstractArray, axes::Tuple{Vararg{AbstractAxis}}) =
@@ -90,7 +90,10 @@ similaraxis(x::AbstractAxis, i) = similaraxis(x, i, axes(parent(x)[unwrap_indice
 convert(::Type{T}, x) where {T<:AbstractAxis} = throw(MethodError(convert, (T, x)))
 convert(::Type{T}, x::T) where {T<:AbstractAxis} = x
 
-show(io::IO, m::MIME"text/plain", x::AbstractAxis) = show_axisarray(io, m, x)
+show(io::IO, m::MIME"text/plain", x::AbstractAxis) =
+    show_axisarray(io, m, x)
+show(io::IO, m::MIME"text/plain", x::SubArray{T,N,A}) where {T,N,A<:AbstractAxis} =
+    show_axisarray(io, m, x)
 
-similar(a::AbstractArray{T,N}, ::Type{T2}, dims::NTuple{N,AbstractAxis}) where {T,N,T2} =
-    similar_axisarray(a, T2, dims)
+similar(a::AbstractArray, T::Type, dims::Tuple{Vararg{AbstractAxis}}) =
+    similar_axisarray(a, T, dims)

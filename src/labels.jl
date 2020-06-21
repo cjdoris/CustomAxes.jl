@@ -143,7 +143,7 @@ rawlabels(x::AxisLabels) = rawlabels(axes(x,1))
 
 length(x::AxisLabels) = length(axes(x,1))
 size(x::AxisLabels) = (length(x),)
-getindex(x::AxisLabels, i) = getlabel(axes(x,1), i)
+getindex(x::AxisLabels, i::Int) = getlabel(axes(x,1), i)
 function showarg(io::IO, x::AxisLabels, top)
     print(io, "AxisLabels(...)")
 end
@@ -156,6 +156,24 @@ function show(io::IO, x::AxisLabels)
     end
     show(io, rawlabels(x))
 end
+
+### CARTESIAN LABELS
+# (like cartesian indices, but for labels)
+# TODO: Make a CartesianLabel type, and return these instead of tuples?
+
+struct CartesianLabels{T,N,A<:NTuple{N,AxisLike}} <: AbstractAxisArray{T,N}
+    axes :: A
+    function CartesianLabels(axes::NTuple{N,AxisLike}) where {N}
+        check_api(axes...)
+        T = Tuple{map(labeltype, axes)...}
+        new{T, N, typeof(axes)}(axes)
+    end
+end
+
+CartesianLabels(x::AbstractArray) = CartesianLabels(axes(x))
+size(x) = map(length, axes(x))
+getindex(x::CartesianLabels{T,N}, inds::Vararg{Int, N}) where {T,N} =
+    map(getlabel, axes(x), inds) :: T
 
 
 ### SUGAR

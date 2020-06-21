@@ -17,29 +17,25 @@ const AbstractAxisMatrix{T} = AbstractAxisArray{T,2}
 axes(x::AbstractAxisArray) = getfield(x, :axes)
 size(x::AbstractAxisArray) = map(length, axes(x))
 
-Base.getindex(x::AbstractAxisArray, args...; opts...) = getindex_axisarray(x, args, opts)
 
-function getindex_axisarray(x, args, opts=())
-    inds, axes = to_indices_and_axes(x, args...; opts...)
-    inds = map(unwrap_indices_for_parent, inds)
-    getindex_axisarray_impl(x, inds, axes)
+## DROPDIMS
+# Julia currently assumes that all axes of an array are the same type.
+
+Base._dropdims(x::AbstractAxisArray, ds) = dropdims_axisarray(x, ds)
+Base._dropdims(x::AbstractAxisArray, d::Integer) = dropdims_axisarray(x, d)
+
+dropdims_axisarray(x, ds) =
+    dropdims_axisarray(x, finddims(ds)::Base.Dims)
+
+function dropdims_axisarray(x, ds::Base.Dims)
+    for d in ds
+        1 ≤ d ≤ ndims(x) || throw(ArgumentError("dropped dims must be in range 1:ndims(A)"))
+        size(x, d) == 1 || throw(ArgumentError("dropped dims must all be size 1"))
+    end
+    newaxes = filter(x -> x !== nothing, ntuple(d -> d in ds ? nothing : axes(x, d), ndims(x)))
+    reshape(x, newaxes)
 end
 
-Base.view(x::AbstractAxisArray, args...; opts...) = view_axisarray(x, args, opts)
-
-function view_axisarray(x, args, opts=())
-    inds, axes = to_indices_and_axes(x, args...; opts...)
-    inds = map(unwrap_indices_for_parent, inds)
-    view_axisarray_impl(x, inds, axes)
-end
-
-Base.dropdims(x::AbstractAxisArray; dims) = dropdims_axisarray(x, dims)
-
-function dropdims_axisarray(x, dims)
-    dims = finddims(dims)
-    newaxes = filter(a -> a !== nothing, ntuple(d -> d in dims ? nothing : axes(x, d), ndims(x)))
-    dropdims_axisarray_impl(x, dims, newaxes)
-end
 
 Base.reduced_indices(x::AbstractAxisArray, d) = reduced_indices_axisarray(x, d)
 
@@ -48,13 +44,15 @@ reduced_indices_axisarray(x, d::Integer) =
 
 function reduced_indices_axisarray(x, ds)
     all(d->d≥1, ds) || throw(ArgumentError("dimensions must be ≥ 1, got $ds"))
-    ntuple(ndims(x)) do d
+    ntuple(Val(ndims(x))) do d
         ax = axes(x, d)
         d in ds ? Base.reduced_index(ax) : ax
     end
 end
 
-# TODO: the above for similar
-# TODO: the above for reshape
+show(io::IO, m::MIME"text/plain", x::AbstractAxisArray) =
+    show_axisarray(io, m, x)
+show(io::IO, m::MIME"text/plain", x::SubArray{T,N,A}) where {T,N,A<:AbstractAxisArray} =
+    show_axisarray(io, m, x)
 
 include("show.jl")

@@ -20,7 +20,8 @@ export
     rawlabels,
     labels,
     newlabels,
-    getlabel
+    getlabel,
+    CartesianLabels
 
 # a promotion scheme for axes (TYPE PIRACY AHEAD!)
 include("promoteindices.jl")

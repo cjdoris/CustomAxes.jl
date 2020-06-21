@@ -1,6 +1,3 @@
-show(io::IO, m::MIME"text/plain", x::AbstractAxisArray) =
-    show_axisarray(io, m, x)
-
 function print_axisarray_pagelabel(io::IO, x::AbstractArray{T,N}, p::NTuple{N2}, crayons) where {T,N,N2}
     @assert N2==N-2
     print(io, "[:, :")
