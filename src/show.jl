@@ -13,6 +13,7 @@ function print_axisarray_pagelabel(io::IO, x::AbstractArray{T,N}, p::NTuple{N2},
 end
 
 function print_axisarray_collabels(io, colaxis, align, colsep, colsplit, colsplitsep)
+    io = IOContext(io, :typeinfo => labeltype(colaxis))
     for (i,(c,(a,b))) in enumerate(align)
         if i-1 == colsplit
             print(io, colsplitsep)
